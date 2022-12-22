@@ -15,7 +15,7 @@ public class ComposedNode extends Node{
             calculateDensity(quad));
         
         this.quad = quad.clone();
-        this.result = new Node[this.getDimension()-1]; //TODO: revisar
+        this.result = new Node[this.getDimension()-1];
     }
     
     private static int calculateDensity(Node ... quad){
@@ -106,7 +106,7 @@ public class ComposedNode extends Node{
             for(int k=0; k<4; k++){
                 this.quad[k].fillArray(array, x+(k/2)*(this.getSize()/2), y+(k%2)*(this.getSize()/2));
             }
-        }	
+        }
 	}
 
 	@Override

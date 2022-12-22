@@ -46,8 +46,7 @@ public class HashlifeState {
 			n /= 2;
 			s--;
 		}
-		
-		//Delete unnecessary borders introduced by borderize()
+
 		this.state = this.state.simplify();
 	}
 

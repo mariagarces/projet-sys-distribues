@@ -41,6 +41,7 @@ public class LeafNode extends Node {
 
 	@Override
 	int getCell(int x, int y) {
+		System.out.println("hola");
 		return this.value;
 	}
 
