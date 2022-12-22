@@ -5,10 +5,10 @@ import java.rmi.registry.LocateRegistry;
 import utils.FileParser;
 import java.io.File;
 
-public class Serveur {
+public class HashLife {
     public static void main(String[] args) {
         try {
-            ImplServeur impl = new ImplServeur();
+            HashLifeServer impl = new HashLifeServer();
             Registry registry = LocateRegistry.createRegistry(2098);
             // Registry registry = LocateRegistry.getRegistry();
 
@@ -37,7 +37,7 @@ public class Serveur {
             //     System.out.println("Register " + nom);
             // }
 
-            System.out.println("Serveur enregistr");
+            System.out.println("HashLife Server enregistre");
 
             // registry.bind("Impl",impl);
             // System.out.println("Serveur pret");

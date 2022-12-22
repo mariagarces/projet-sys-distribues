@@ -2,13 +2,16 @@ package parallel;
 
 import java.rmi.Remote;
 
-public interface InterfaceTest extends Remote{
-    public int[][] divideArrayByRows(int d, int h, int w, int[][] array, int index)
+public interface IHashLifeServer extends Remote{
+    public int[] getMatrixAssignment(int row)
         throws java.rmi.RemoteException;
     public void setMatrix(int[][] matrix)
         throws java.rmi.RemoteException;
-    public int[][] getMatrix()
+    public int getMatrixSize()
+        throws java.rmi.RemoteException;
+    public int getSubMatrixSize()
         throws java.rmi.RemoteException;
     public int[][] printEachState(int steps)
         throws java.rmi.RemoteException;
+    public void calculateNextGen(GenerationMessage msg) throws java.rmi.RemoteException;
 }
