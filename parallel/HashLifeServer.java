@@ -114,7 +114,6 @@ public class HashLifeServer extends UnicastRemoteObject implements IHashLifeServ
       	    long elapsedTime = stopTime - startTime;
       	    System.out.println("Time: "+ elapsedTime);
         }
-            
-        System.out.println("End of generation" + this.numGen);
+        System.out.println("End of generation");
     }
 }
