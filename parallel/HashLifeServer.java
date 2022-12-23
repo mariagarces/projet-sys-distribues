@@ -2,9 +2,11 @@ package parallel;
 
 import java.rmi.server.*;
 import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.List;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import hashlife.Hashlife;
 
 public class HashLifeServer extends UnicastRemoteObject implements IHashLifeServer{
@@ -12,6 +14,9 @@ public class HashLifeServer extends UnicastRemoteObject implements IHashLifeServ
     private Hashlife a;
     private List<GenerationMessage> msgs;
     private int n;
+    private int numGen;
+    Registry reg = LocateRegistry.getRegistry(2098);
+    private long startTime;
 
     public HashLifeServer() throws RemoteException{
         super();
@@ -20,36 +25,10 @@ public class HashLifeServer extends UnicastRemoteObject implements IHashLifeServ
     }
 
     @Override
-    public int[] getMatrixAssignment(int row){
-		// int[][] matrix;
-		// List<int[][]> matrices = new ArrayList<>();
-
-		// int hSize = (int)Math.round((float)h/(float)d);
-		// int initP=0;
-
-		// if(d<=h){
-		// 	for(int i=0; i<d; i++){
-		// 		matrix = new int[hSize][w];
-	
-		// 		for (int[] row: matrix)
-		// 			Arrays.fill(row, 0);
-	
-		// 		for (int k=0; k<hSize; k++){
-		// 			for(int j=0; j<array[k].length; j++){
-		// 				if(k+initP < array.length)
-		// 					matrix[k][j] = array[k+initP][j];
-		// 			}
-		// 		}
-	
-		// 		initP += hSize;
-	
-		// 		matrices.add(matrix);
-		// 	}
-		// }
-		
-		// return matrices.get(index);
+    public int[] getMatrixAssignment(int row) {
         return matrix[row];
 	}
+
     @Override
     public void setMatrix(int[][] matrix){
         this.matrix = matrix;
@@ -73,14 +52,69 @@ public class HashLifeServer extends UnicastRemoteObject implements IHashLifeServ
 	}
 
     @Override
-    public void calculateNextGen(GenerationMessage msg) throws RemoteException {
-        // When number of elements in the lsit is equal to n, per msg:
-        // load from array in hashlife the matrix inside msg.
-        // evolve hashlife one step. 
-        // Send a new GenMsg to corresponding LGRow.
-        //SAve msgs into a different pointer, then replace msgs with a new arraylist.
-        //When all rows have been traversed, trigger next gen for each row.
-        a.evolve(0);
+    public synchronized void calculateNextGen(GenerationMessage msg) throws RemoteException {        
+        List<GenerationMessage> copyMsgs;
+        msgs.add(msg);
+
+        try {
+            if(this.msgs.size() == getMatrixSize() && this.numGen >= 0) {
+                printMatrix();
+                for(int i=0; i<this.msgs.size(); i++) {
+                    a.loadFromArray(msg.getInfo());
+                    int[][] matrix = a.printEachState(1);
+                    GenerationMessage gMessage = new GenerationMessage(matrix, -1);
+                    ILGRow iRow = (ILGRow)reg.lookup("row"+this.msgs.get(i).getMsgSource());
+                    iRow.setNewGeneration(gMessage);
+                }
+
+                copyMsgs = new ArrayList<>(this.msgs);
+
+                for(int i=0; i<copyMsgs.size(); i++) {
+                    ILGRow iRow = (ILGRow)reg.lookup("row"+copyMsgs.get(i).getMsgSource());
+                    Thread t = new Thread(new Runnable() {
+                         @Override
+                         public void run() {
+                             try {
+                                iRow.triggerNextGeneration();
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                         }
+                    });
+                    t.start();
+                }
+
+                this.msgs = new ArrayList<>();
+                this.numGen--;
+            }
+        } catch(Exception e){
+            System.err.println("Erreur :" + e);
+        }
     }
 
+    public void setGenerations(int numGen) {
+        this.numGen = numGen;
+    }
+
+    public void printMatrix() throws AccessException, RemoteException, NotBoundException{
+        for(int i=0; i<getMatrixSize(); i++){
+            ILGRow iRow = (ILGRow)reg.lookup("row"+i);
+            int[] row = iRow.getCurrRow();
+
+            for(int j=0; j<row.length; j++){
+                System.out.print(row[j]);
+            }
+            System.out.println("");
+        }
+        if(this.numGen == 5){
+            startTime = System.nanoTime();
+        }
+        if(this.numGen == 0){
+            long stopTime = System.nanoTime();
+      	    long elapsedTime = stopTime - startTime;
+      	    System.out.println("Time: "+ elapsedTime);
+        }
+            
+        System.out.println("End of generation" + this.numGen);
+    }
 }
